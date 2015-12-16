@@ -4,50 +4,46 @@ obi_api_logging_enabled=True
 
 class APILoggedBase():
     """
-    Inheriting from this class provides logging of member access
+    Inheriting from this class provides logging of member access.
+
+    TODO: - log before up-call (exception case) in __getattribute__
+          - provide functionality as decorator
     """
-    _obi_no_log_logger = logging.getLogger()
-    _obi_no_log_exclude = [ "setClassLogger", "getClassLogger"
-                          , "setInstanceLogger", "getInstnaceOrClassLogger"
-                          ]
+    _obi_logger = logging.getLogger()
 
     def __getattribute__(self,name):
-        rv = super().__getattribute__(name)
-        if ( obi_api_logging_enabled
-             and not (name.startswith("__") or name.startswith("_obi_no_log"))
-             and not self._obi_no_log_check_exclude(name)):
-             # using the above line only would be shorter and lead to more recursion :P
-            self._obi_no_log_logger.info(
-                "get: " + str(self.__class__.__name__) + "." + name + " -> " + str(rv))
-        return rv
+        if not obi_api_logging_enabled:
+            return super().__getattribute__(name)
+        else:
+            rv = super().__getattribute__(name)
+            if (not (name.startswith("__") or name.startswith("_obi_"))):
+                self._obi_logger.info(
+                    "get: " + str(self.__class__.__name__) +
+                    "." + name + " -> " + str(rv)
+                )
+            return rv
 
     def __setattr__(self,name,value):
-        rv = super().__setattr__(name, value)
-        if ( obi_api_logging_enabled
-             and not (name.startswith("__") or name.startswith("_obi_no_log"))
-             and not self._obi_no_log_check_exclude(name)):
-            self.__class__._obi_no_log_logger.info(
-                "set: " + str(self.__class__.__name__) + "." + name + " <- " + str(value))
-        return rv
-
-    @classmethod
-    def _obi_no_log_check_exclude(cls, name):
-        if name in cls._obi_no_log_exclude:
-            return True
-        return False
+        if (obi_api_logging_enabled and
+            not (name.startswith("__") or name.startswith("_obi_"))):
+            self.__class__._obi_logger.info(
+                "set: " + str(self.__class__.__name__) +
+                "." + name + " <- " + str(value)
+            )
+        return super().__setattr__(name, value)
 
     @classmethod
     def setClassLogger(cls, logger):
-        cls._obi_no_log_logger = logger
+        cls._obi_logger = logger
 
     @classmethod
     def getClassLogger(cls):
-        return cls._obi_no_log_logger
+        return cls._obi_logger
 
     def setInstanceLogger(self, logger):
-        self._obi_no_log_logger = logger
+        self._obi_logger = logger
 
-    # TODO - when an instanace is asked for the logger and it can not
-    #        provide the object it propagets the request to lower levels
+    # TODO - when an instance is asked for the logger and it can not
+    #        provide the object it propagates the request to lower levels
     def getInstanceOrClassLogger(self):
-        return self._obi_no_log_logger
+        return self._obi_logger
