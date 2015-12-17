@@ -6,8 +6,8 @@ class APILoggedBase():
     """
     Inheriting from this class provides logging of member access.
 
-    TODO: - log before up-call (exception case) in __getattribute__
-          - provide functionality as decorator
+    TODO: - provide functionality as decorator
+          - create better documenation
     """
     _obi_logger = logging.getLogger()
 
@@ -15,21 +15,28 @@ class APILoggedBase():
         if not obi_api_logging_enabled:
             return super().__getattribute__(name)
         else:
-            rv = super().__getattribute__(name)
+            do_log = False
             if (not (name.startswith("__") or name.startswith("_obi_"))):
-                self._obi_logger.info(
-                    "get: " + str(self.__class__.__name__) +
-                    "." + name + " -> " + str(rv)
+                do_log = True
+                log_string="get: {c}.{a}".format(
+                    c = str(self.__class__.__name__), a = name
                 )
+            try:
+                rv = super().__getattribute__(name)
+            except Exception as e:
+                if do_log:
+                    self._obi_logger.error(log_string + " ERROR")
+                raise
+            if do_log:
+                self._obi_logger.info(log_string + " -> " + str(rv))
             return rv
 
     def __setattr__(self,name,value):
         if (obi_api_logging_enabled and
             not (name.startswith("__") or name.startswith("_obi_"))):
-            self.__class__._obi_logger.info(
-                "set: " + str(self.__class__.__name__) +
-                "." + name + " <- " + str(value)
-            )
+            self.__class__._obi_logger.info("set: {c}.{a} <- {v}".format(
+                c = str(self.__class__.__name__), a = name, v = value
+            ))
         return super().__setattr__(name, value)
 
     @classmethod
