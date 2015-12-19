@@ -25,7 +25,7 @@ class APILoggedBase():
             rv = super().__getattribute__(name)
         except Exception as e:
             if do_log:
-                self._obi_logger.error(log_string + " ERROR")
+                self._obi_logger.exception(log_string + " ERROR")
             raise
         if do_log:
             self._obi_logger.info(log_string + " -> " + str(rv))
