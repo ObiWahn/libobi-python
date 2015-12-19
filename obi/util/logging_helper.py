@@ -40,19 +40,3 @@ class APILoggedBase():
                 c = str(self.__class__.__name__), a = name, v = value
             ))
         return super().__setattr__(name, value)
-
-    @classmethod
-    def setClassLogger(cls, logger):
-        cls._obi_logger = logger
-
-    @classmethod
-    def getClassLogger(cls):
-        return cls._obi_logger
-
-    def setInstanceLogger(self, logger):
-        self._obi_logger = logger
-
-    # TODO - when an instance is asked for the logger and it can not
-    #        provide the object it propagates the request to lower levels
-    def getInstanceOrClassLogger(self):
-        return self._obi_logger
