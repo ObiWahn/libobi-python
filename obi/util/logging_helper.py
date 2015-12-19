@@ -1,15 +1,30 @@
 import logging
 
-obi_api_logging_enabled=True
+obi_api_logging_enabled = True
+obi_api_logging_default_logger = logging.getLogger()
 
 class APILoggedBase():
     """
     Inheriting from this class provides logging of member access.
 
-    TODO: - provide functionality as decorator
-          - create better documenation
+    Given a class 'Some' has this class as base the following code
+    would produce the shown log information.
+
+    Code:
+        some = Some()
+        some.foo = "bar"
+        print(some.foo)
+
+    Log:
+        INFO:root:set: Some.foo <- bar
+        INFO:root:get: Some.foo -> bar
+
+    The default logger can be changed by changing the default vaule
+    of this module (obi_default_logge). Or by changing the _obi_logger
+    member of an instance or class.
     """
-    _obi_logger = logging.getLogger()
+
+    _obi_logger = obi_default_logger
 
     def __getattribute__(self,name):
         if not obi_api_logging_enabled:
