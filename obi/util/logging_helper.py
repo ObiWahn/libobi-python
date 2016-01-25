@@ -1,4 +1,5 @@
 import logging
+import obi.util.function_details as fd
 
 obi_api_logging_enabled = True
 obi_api_logging_default_logger = logging.getLogger()
@@ -24,7 +25,7 @@ class APILoggedBase():
     member of an instance or class.
     """
 
-    _obi_logger = obi_default_logger
+    _obi_logger = obi_api_logging_default_logger
 
     def __getattribute__(self,name):
         if not obi_api_logging_enabled:
@@ -59,8 +60,8 @@ class APILoggedBase():
 
 def loggedfunction(to_log):
     def logged(*args, **kwargs):
-        logger = logging.getLogger(obi_api_logging_default_logger)
-        msg = "calling: {0} with arguments '{1}'".format(to_log.__name__ ,args_to_str(*args,**kwargs))
+        logger = obi_api_logging_default_logger
+        msg = "calling: {0} with arguments '{1}'".format(to_log.__name__ ,fd.args_to_str(*args,**kwargs))
         logger.info(msg)
         to_log( *args, **kwargs)
     return logged
