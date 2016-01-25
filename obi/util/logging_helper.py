@@ -55,3 +55,12 @@ class APILoggedBase():
                 c = str(self.__class__.__name__), a = name, v = value
             ))
         return super().__setattr__(name, value)
+##  APILoggedBase
+
+def loggedfunction(to_log):
+    def logged(*args, **kwargs):
+        logger = logging.getLogger(obi_api_logging_default_logger)
+        msg = "calling: {0} with arguments '{1}'".format(to_log.__name__ ,args_to_str(*args,**kwargs))
+        logger.info(msg)
+        to_log( *args, **kwargs)
+    return logged
