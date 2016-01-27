@@ -1,8 +1,28 @@
 import logging
 import obi.util.function_details as fd
 
-obi_api_logging_enabled = True
-obi_api_logging_default_logger = logging.getLogger()
+obi_logging_enabled = True
+obi_logging_logger = None
+
+def init(logger_name = None, level = None, handlers = None):
+    global obi_logging_logger
+    if logger_name:
+        obi_logging_logger = logging.getLogger(logger_name)
+    else:
+        obi_logging_logger = logging.getLogger("obi_default")
+
+    if level:
+        obi_logging_logger.setLevel(level)
+    else:
+        obi_logging_logger.setLevel(logging.INFO)
+
+    if handlers:
+        for handler in handlers:
+            obi_logging_logger.addHandler(handler)
+    else:
+        obi_logging_logger.addHandler(logging.StreamHandler())
+
+init()
 
 class APILoggedBase():
     """
@@ -25,7 +45,7 @@ class APILoggedBase():
     member of an instance or class.
     """
 
-    _obi_logger = obi_api_logging_default_logger
+    _obi_logger = obi_logging_logger
 
     def __getattribute__(self,name):
         if not obi_api_logging_enabled:
@@ -60,8 +80,8 @@ class APILoggedBase():
 
 def loggedfunction(to_log):
     def logged(*args, **kwargs):
-        logger = obi_api_logging_default_logger
-        msg = "calling: {0} with arguments '{1}'".format(to_log.__name__ ,fd.args_to_str(*args,**kwargs))
+        logger = obi_logging_logger
+        msg = "calling: {0}({1})".format(to_log.__name__ ,fd.args_to_str(*args,**kwargs))
         logger.info(msg)
-        to_log( *args, **kwargs)
+        return to_log( *args, **kwargs)
     return logged
