@@ -1,28 +1,42 @@
+#!/usr/bin/python3
+# Copyright - 2016 - Jan Christoph Uhde <Jan@UhdeJC.com>
+
 import logging
 import obi.util.function_details as fd
 
 obi_logging_enabled = True
 obi_logging_logger = None
 
-def init(logger_name = None, level = None, handlers = None):
-    global obi_logging_logger
+def init(logger_name = None, level = None, handlers = []):
+    logger = None
     if logger_name:
-        obi_logging_logger = logging.getLogger(logger_name)
+        logger = logging.getLogger(logger_name)
     else:
-        obi_logging_logger = logging.getLogger("obi_default")
+        logger = logging.getLogger("obi_default")
 
-    if level:
-        obi_logging_logger.setLevel(level)
-    else:
-        obi_logging_logger.setLevel(logging.INFO)
+    if not level:
+        level = logging.INFO
+    logger.setLevel(level)
 
     if handlers:
         for handler in handlers:
-            obi_logging_logger.addHandler(handler)
+            print("adding")
+            logger.addHandler(handler)
     else:
-        obi_logging_logger.addHandler(logging.StreamHandler())
+        print("else")
+        logger.addHandler(logging.StreamHandler())
 
+    global obi_logging_logger
+    obi_logging_logger = logger
+
+# We could make the init mandatory
 init()
+
+def add_obi_formatter(handler):
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)7s - %(filename)s:%(lineno)s - %(message)s')
+    handler.setFormatter(formatter)
+    return handler
+
 
 class APILoggedBase():
     """
