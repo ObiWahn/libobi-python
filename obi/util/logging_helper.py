@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 # Copyright - 2016 - Jan Christoph Uhde <Jan@UhdeJC.com>
 
-import logging
+import logging,sys
+
 import obi.util.function_details as fd
+from pprint import pprint as PP
+from pprint import pformat as PF
 
 obi_logging_enabled = True
 obi_logging_logger = None
@@ -36,6 +39,24 @@ def add_obi_formatter(handler):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)7s - %(filename)s:%(lineno)s - %(message)s')
     handler.setFormatter(formatter)
     return handler
+
+def log_with_caller_info(logger, level, msg, depth=3):
+    frame = sys._getframe(depth)
+
+    filename = frame.f_code.co_filename
+    name = frame.f_code.co_name
+    line = frame.f_lineno
+
+    record = logger.makeRecord(logger.name
+                              ,logging.INFO
+                              ,filename
+                              ,line
+                              ,msg
+                              ,None
+                              ,None
+                              ,name
+                              ,None)
+    logger.handle(record)
 
 
 class APILoggedBase():
