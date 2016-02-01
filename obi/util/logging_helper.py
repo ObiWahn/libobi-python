@@ -9,8 +9,10 @@ from pprint import pformat as PF
 
 obi_logging_enabled = True
 obi_logging_logger = None
+obi_logging_detailed = True
+obi_logging_api=True
 
-def init(logger_name = None, level = None, handlers = []):
+def init(logger_name = None, level = None, handler = None, handlers = []):
     logger = None
     if logger_name:
         logger = logging.getLogger(logger_name)
@@ -21,12 +23,13 @@ def init(logger_name = None, level = None, handlers = []):
         level = logging.INFO
     logger.setLevel(level)
 
+    if handler:
+        handlers.append(handler)
+
     if handlers:
         for handler in handlers:
-            print("adding")
             logger.addHandler(handler)
     else:
-        print("else")
         logger.addHandler(logging.StreamHandler())
 
     global obi_logging_logger
@@ -40,7 +43,7 @@ def add_obi_formatter(handler):
     handler.setFormatter(formatter)
     return handler
 
-def log_with_caller_info(logger, level, msg, depth=3):
+def log_with_caller_info(logger, level, msg, depth=2):
     frame = sys._getframe(depth)
 
     filename = frame.f_code.co_filename
@@ -59,7 +62,7 @@ def log_with_caller_info(logger, level, msg, depth=3):
     logger.handle(record)
 
 
-class APILoggedBase():
+class LoggedBase():
     """
     Inheriting from this class provides logging of member access.
 
@@ -75,15 +78,10 @@ class APILoggedBase():
         INFO:root:set: Some.foo <- bar
         INFO:root:get: Some.foo -> bar
 
-    The default logger can be changed by changing the default vaule
-    of this module (obi_default_logge). Or by changing the _obi_logger
-    member of an instance or class.
     """
 
-    _obi_logger = obi_logging_logger
-
     def __getattribute__(self,name):
-        if not obi_api_logging_enabled:
+        if not obi_logging_api:
             return super().__getattribute__(name)
 
         do_log = False
@@ -96,20 +94,29 @@ class APILoggedBase():
             rv = super().__getattribute__(name)
         except Exception as e:
             if do_log:
-                self._obi_logger.exception(log_string + " ERROR")
+                obi_logging_logger.exception(log_string + " ERROR")
             raise
         if do_log:
-            self._obi_logger.info(log_string + " -> " + str(rv))
+            msg = "{0} -> {str(1)}".format(log_string,rv)
+            if obi_logging_detailed:
+                log_with_caller_info(obi_logging_logger, logging.INFO, msg)
+            else:
+                obi_logging_logger.info(msg)
         return rv
 
     def __setattr__(self,name,value):
-        if ( obi_api_logging_enabled and
+        if ( obi_logging_api and
              not name.startswith("__") and
              not name.startswith("_obi_")
         ):
-            self.__class__._obi_logger.info("set: {c}.{a} <- {v}".format(
-                c = str(self.__class__.__name__), a = name, v = value
-            ))
+            msg = "set: {c}.{a} <- {v}".format(c = str(self.__class__.__name__)
+                                              ,a = name
+                                              ,v = value
+                                              )
+            if obi_logging_detailed:
+                log_with_caller_info(obi_logging_logger, logging.INFO, msg)
+            else:
+                obi_logging_logger.info(msg)
         return super().__setattr__(name, value)
 ##  APILoggedBase
 
@@ -117,6 +124,9 @@ def loggedfunction(to_log):
     def logged(*args, **kwargs):
         logger = obi_logging_logger
         msg = "calling: {0}({1})".format(to_log.__name__ ,fd.args_to_str(*args,**kwargs))
-        logger.info(msg)
+        if obi_logging_detailed:
+            log_with_caller_info(logger, logging.INFO, msg)
+        else:
+            logger.info(msg)
         return to_log( *args, **kwargs)
     return logged
