@@ -12,7 +12,7 @@ obi_logging_logger = None
 obi_logging_detailed = True
 obi_logging_api=True
 
-def init(logger_name = None, level = None, handler = None, handlers = []):
+def create_logger(logger_name = None, level = None, handler = None, handlers = []):
     logger = None
     if logger_name:
         logger = logging.getLogger(logger_name)
@@ -32,11 +32,21 @@ def init(logger_name = None, level = None, handler = None, handlers = []):
     else:
         logger.addHandler(logging.StreamHandler())
 
+    return logger
+
+
+def init(logger_name = None, level = None, handler = None, handlers = []):
+    logger = create_logger(logger_name, handler, handlers)
     global obi_logging_logger
     obi_logging_logger = logger
 
 # We could make the init mandatory
 init()
+
+def add_obi_formatter_short(handler):
+    formatter = logging.Formatter('%(levelname)7s - %(filename)s:%(lineno)s - %(message)s')
+    handler.setFormatter(formatter)
+    return handler
 
 def add_obi_formatter(handler):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)7s - %(filename)s:%(lineno)s - %(message)s')
