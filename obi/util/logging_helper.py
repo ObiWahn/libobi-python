@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Copyright - 2016 - Jan Christoph Uhde <Jan@UhdeJC.com>
 
-import logging,sys
+import logging, sys
 
 import obi.util.function_details as fd
 from pprint import pprint as PP
