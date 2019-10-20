@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Copyright - 2019 - Jan Christoph Uhde <Jan@UhdeJC.com>
 
-import os
+from .logging_helper import obi_logging_logger as logger
+import sys, os
 from pathlib import Path
 
 def remove_from_front(path:Path, *args):
@@ -36,6 +37,7 @@ def create_filter_path(*paths):
         for prefix in paths:
             absolute_prefix_path = Path(prefix).resolve()
             if str(absolute_path).startswith(str(absolute_prefix_path)):
+                logger.debug(str(absolute_path))
                 return True
         return False
     return filter_path
