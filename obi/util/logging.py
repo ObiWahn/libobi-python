@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # Copyright - 2016 - Jan Christoph Uhde <Jan@UhdeJC.com>
-
 import logging
 import sys
 
-import obi.util.function_details as fd
+import obi.util.stringify as sf
 
 # debugging helper
 # from pprint import pprint as PP
@@ -16,17 +15,11 @@ obi_logging_detailed = True
 obi_logging_api = True
 
 
-def create_logger(logger_name=None, level=None, handler=None, handlers=[]):
-    if logger_name:
-        logger = logging.getLogger(logger_name)
-    else:
-        logger = logging.getLogger("obi_default")
-
+def create_logger(
+    logger_name: str = "obi_default", level: int = logging.INFO, handler=None, handlers=[]
+) -> logging.Logger:
+    logger = logging.getLogger(logger_name)
     logger.handlers = []
-
-    if not level:
-        level = logging.INFO
-
     logger.setLevel(level)
 
     if handler:
@@ -41,9 +34,11 @@ def create_logger(logger_name=None, level=None, handler=None, handlers=[]):
     return logger
 
 
-def init_logging(logger_name=None, level=None, handler=None, handlers=[]):
+def init_logging(
+    logger_name: str = "obi_default", level: int = logging.INFO, handler=None, handlers=[]
+) -> logging.Logger:
     global obi_logging_logger
-    obi_logging_logger = create_logger(logger_name, handler, handlers)
+    obi_logging_logger = create_logger(logger_name, level, handler, handlers)
     return obi_logging_logger
 
 
@@ -51,20 +46,17 @@ def init_logging(logger_name=None, level=None, handler=None, handlers=[]):
 init_logging()
 
 
-def add_obi_formatter_short(handler):
-    formatter = logging.Formatter(
-        "%(levelname)7s - %(filename)s:%(lineno)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    return handler
+def apply_formatter(logger: logging.Logger, formatter):
+    for handler in logger.handlers:
+        handler.setFormatter(formatter)
 
 
-def add_obi_formatter(handler):
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)7s - %(filename)s:%(lineno)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    return handler
+def create_obi_formatter_short():
+    return logging.Formatter("%(levelname)7s - %(filename)s:%(lineno)s - %(message)s")
+
+
+def create_obi_formatter():
+    return logging.Formatter("%(asctime)s - %(name)s - %(levelname)7s - %(filename)s:%(lineno)s - %(message)s")
 
 
 def log_with_caller_info(logger, level, msg, depth=2):
@@ -74,9 +66,7 @@ def log_with_caller_info(logger, level, msg, depth=2):
     name = frame.f_code.co_name
     line = frame.f_lineno
 
-    record = logger.makeRecord(
-        logger.name, logging.INFO, filename, line, msg, None, None, name, None
-    )
+    record = logger.makeRecord(logger.name, logging.INFO, filename, line, msg, None, None, name, None)
     logger.handle(record)
 
 
@@ -121,14 +111,8 @@ class LoggedBase:
         return rv
 
     def __setattr__(self, name, value):
-        if (
-            obi_logging_api
-            and not name.startswith("__")
-            and not name.startswith("_obi_")
-        ):
-            msg = "set: {c}.{a} <- {v}".format(
-                c=str(self.__class__.__name__), a=name, v=value
-            )
+        if obi_logging_api and not name.startswith("__") and not name.startswith("_obi_"):
+            msg = "set: {c}.{a} <- {v}".format(c=str(self.__class__.__name__), a=name, v=value)
             if obi_logging_detailed:
                 log_with_caller_info(obi_logging_logger, logging.INFO, msg)
             else:
@@ -140,9 +124,7 @@ class LoggedBase:
 def loggedfunction(to_log):
     def logged(*args, **kwargs):
         logger = obi_logging_logger
-        msg = "calling: {0}({1})".format(
-            to_log.__name__, fd.args_to_str(*args, **kwargs)
-        )
+        msg = "calling: {0}({1})".format(to_log.__name__, sf.args_to_str(*args, **kwargs))
         if obi_logging_detailed:
             log_with_caller_info(logger, logging.INFO, msg)
         else:

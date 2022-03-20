@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def args_to_str(*args, **kwargs) -> str:
     """create string representation of *args and **kwargs"""
     rv = ""

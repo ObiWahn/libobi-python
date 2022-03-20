@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # Copyright - 2019 - Jan Christoph Uhde <Jan@UhdeJC.com>
 
-from .logging_helper import obi_logging_logger as logger
+from .logging import obi_logging_logger as logger
 from pathlib import Path
 import os
 
 
-def remove_from_front(path: Path, *args):
+def remove_from_front(path: Path, *args) -> Path:
     parts = list(path.parts)
     for arg in args:
         if parts[0] == arg:
@@ -16,7 +16,7 @@ def remove_from_front(path: Path, *args):
     return Path().joinpath(*parts)
 
 
-def change_ext(path: Path, ext):
+def change_ext(path: Path, ext) -> Path:
     return Path(path.parent).joinpath(path.stem + ext)
 
 
